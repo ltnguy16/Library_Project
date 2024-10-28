@@ -24,6 +24,22 @@ class Color:
     
     @staticmethod
     def color_text(text: str, color: str) -> str:
+        """
+        Print text in choose color 
+
+        Parameters
+        ----------
+        text : str
+            The text to print
+        color : str
+            color from the options available in the Color class
+
+        Returns
+        -------
+        str
+            The Text in selected color
+
+        """
         return f"{color}{text}{Color.RESET}"
     
 def timer(f):
@@ -46,7 +62,6 @@ def timer(f):
         result = f(*args, **kwargs)
         stop_time = time.time()
         time_delta = stop_time - start_time
-        
         print(Color.color_text(f'Time Delta = {time_delta:.4f} seconds for [{f.__name__}]', Color.CYAN))
         return result
     return wrapper
@@ -69,8 +84,7 @@ def create_database(path: str) -> bool:
     bool: 
         success or fail to create database
     """
-    connection = sqlite3.connect(path)
-    cursor = connection.cursor()
+    connection, cursor = _get_db_connection(path)
     try:
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS books (
@@ -131,8 +145,7 @@ def print_all_records(path: str):
     None.
 
     """
-    connection = sqlite3.connect(path)
-    cursor = connection.cursor()
+    connection, cursor = _get_db_connection(path)
     try:
         query = 'SELECT * FROM books'
         book_data = cursor.execute(query)
@@ -162,8 +175,7 @@ def search_books(path: str, status: int):
     None.
 
     """
-    connection = sqlite3.connect(path)
-    cursor = connection.cursor()
+    connection, cursor = _get_db_connection(path)
     try:
         query = 'SELECT * FROM books WHERE Status=?'
         param = [status]
@@ -192,8 +204,7 @@ def print_all_records_sorted(path: str):
     None.
 
     """
-    connection = sqlite3.connect(path)
-    cursor = connection.cursor()
+    connection, cursor = _get_db_connection(path)
     try:
         query = 'SELECT * FROM books ORDER BY Status DESC, Due_Date DESC'
         book_data = cursor.execute(query)
@@ -226,8 +237,7 @@ def update_book(path: str, book_id: str, checkin: int):
     None.
 
     """
-    connection = sqlite3.connect(path)
-    cursor = connection.cursor()
+    connection, cursor = _get_db_connection(path)
     try:
         get_book_query = 'SELECT Status, Due_Date, Title FROM books WHERE Book_ID=?'
         get_book_param = [book_id]
@@ -276,22 +286,16 @@ def update_book(path: str, book_id: str, checkin: int):
         if connection:
             connection.close()
 
+#Helper function for printing list of book
 def _print_book_list(book_data):
-    """
-    Helper Function for printing list of book
-
-    Parameters
-    ----------
-    book_data : TYPE
-        List of book from sql
-
-    Returns
-    -------
-    None.
-
-    """
     for book in book_data:
         print(f'{book[0]}, {book[1]}, {book[2]}, {book[3]}, {book[4]}, {datetime.fromtimestamp(book[5])}')
+
+# Helper function for connecting to the database
+def _get_db_connection(path: str):
+    connection = sqlite3.connect(path)
+    return connection, connection.cursor() 
+    
 """
 NOTES:
     Will create a sqlite database name library.db at which ever location this .py file is located at
@@ -314,6 +318,10 @@ if __name__ == "__main__":
         
         choice = input('Select an option (1-5): ').strip()
         print()
+        if not choice.isdigit() or int(choice) not in range(1, 6):
+            print(Color.color_text('Invalid Choice. Please select a valid option', Color.MAGENTA))
+            continue
+            
         if choice == '1':
             print_all_records(lib_path)
         elif choice == '2':
@@ -332,7 +340,6 @@ if __name__ == "__main__":
                 choice_flag = False
             if status != 'exit':
                 search_books(lib_path, status)
-            
         elif choice == '4':
             choice_flag = True
             book_id = input('Enter Book ID to update: ').strip()
@@ -352,6 +359,4 @@ if __name__ == "__main__":
         elif choice == '5':
             print("End the program")
             break
-        else:
-            print(Color.color_text('Invalid Choice. Please select a valid option', Color.MAGENTA))
         
