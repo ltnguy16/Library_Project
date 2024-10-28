@@ -338,7 +338,7 @@ if __name__ == "__main__":
                     print(Color.color_text('Invalid Status. Please select a valid option', Color.MAGENTA))
                     continue
                 choice_flag = False
-            if status != 'exit':
+            if status.lower() != 'exit':
                 search_books(lib_path, status)
         elif choice == '4':
             choice_flag = True
@@ -354,7 +354,7 @@ if __name__ == "__main__":
                     continue
                 choice_flag = False
             
-            if status != 'exit': 
+            if status.lower() != 'exit': 
                 update_book(lib_path, book_id, int(status))
         elif choice == '5':
             print("End the program")
